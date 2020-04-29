@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.0": {
+      "data-parallelism/1.0.0": {
+        "runtime": {
+          "data-parallelism.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "data-parallelism/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
