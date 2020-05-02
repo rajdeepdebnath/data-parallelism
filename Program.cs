@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace data_parallelism
@@ -7,23 +9,61 @@ namespace data_parallelism
     {
         static void Main(string[] args)
         {
-            Parallel.For(0, 10, new ParallelOptions{ MaxDegreeOfParallelism=3 }, (i, state) => {
-                Task.Delay(1000).GetAwaiter().GetResult();
+            ConcurrentQueue<Exception> exceptions = new ConcurrentQueue<Exception>();
 
-                if(state.ShouldExitCurrentIteration)
+            try
+            {
+                Parallel.For(0, 10, (i, state) => {
+                    try
+                    {
+                        if (i == 2 || i==7)
+                        {
+                            throw new Exception($"exception in index {i}.");
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        exceptions.Enqueue(ex);
+                    }
+
+                    Console.WriteLine(i);
+                });
+
+                if (exceptions.Count>0)
                 {
-                    Console.WriteLine($"Current:{i}, LowestBreakIteration:{state.LowestBreakIteration}, IsExceptional:{state.IsExceptional}");
-                    return;
+                    throw new AggregateException(exceptions);
                 }
-
-                Console.WriteLine(i);
-
-                if(i == 3)
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex is AggregateException);
+                
+                if (ex is AggregateException)
                 {
-                    //state.Stop();
-                    throw new Exception("new exception");
+                    foreach (var item in (ex as AggregateException).InnerExceptions)
+                    {
+                        Console.WriteLine(item.Message);
+                    }
                 }
-            });
+            }
+            // Parallel.For(0, 10, new ParallelOptions{ MaxDegreeOfParallelism=3 }, (i, state) => {
+            //     Task.Delay(1000).GetAwaiter().GetResult();
+
+            //     if(state.ShouldExitCurrentIteration)
+            //     {
+            //         Console.WriteLine($"Current:{i}, LowestBreakIteration:{state.LowestBreakIteration}, IsExceptional:{state.IsExceptional}");
+            //         return;
+            //     }
+
+            //     Console.WriteLine(i);
+
+            //     if(i == 3)
+            //     {
+            //         //state.Break();
+            //         //state.Stop();
+            //         throw new Exception("new exception");
+            //     }
+            // });
             //Parallel.For(0,2,Method1);
             // Parallel.For(0, 3, delegate(int i){
             //     Console.WriteLine($"delegate:{i}");
